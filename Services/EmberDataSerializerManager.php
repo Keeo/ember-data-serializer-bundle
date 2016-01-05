@@ -43,14 +43,32 @@ class EmberDataSerializerManager implements ContainerAwareInterface
     }
 
     /**
+     * Formats array full of same entities or one entity while ignoring side-loading.
+     *
+     * @param EmberDataSerializableInterface[]|EmberDataSerializableInterface $objects
+     *
+     * @return array
+     */
+    public function formatWithoutRecursion($objects)
+    {
+        if (is_array($objects)) {
+            $this->format($objects, null, 0);
+        } else {
+            $this->formatOne($objects, null, 0);
+        }
+        return $this->data;
+    }
+
+    /**
      * @param EmberDataSerializableInterface[] $objects
      * @param null|string                      $forcedKey
+     * @param int                              $maxDepth
      *
      * @return array
      *
      * @throws InvalidEmberDataSerializerInputException
      */
-    public function format($objects, $forcedKey = null)
+    public function format($objects, $forcedKey = null, $maxDepth = INF)
     {
         $this->createDataKeyIfNotExists($forcedKey);
 
@@ -71,7 +89,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
         }
 
         foreach ($objects as $object) {
-            $this->checkAccessAndParseSerializableObject($object);
+            $this->checkAccessAndParseSerializableObject($object, $maxDepth);
         }
 
         return $this->data;
@@ -84,11 +102,11 @@ class EmberDataSerializerManager implements ContainerAwareInterface
      * @return array
      * @throws \Exception
      */
-    public function formatOne(EmberDataSerializableInterface $object, $forcedKey = null)
+    public function formatOne(EmberDataSerializableInterface $object, $forcedKey = null, $maxDepth = INF)
     {
         $this->createDataKeyIfNotExists($forcedKey);
 
-        $this->parseSerializableObject($object, false);
+        $this->parseSerializableObject($object, false, $maxDepth);
 
         return $this->data;
     }
@@ -110,7 +128,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
      *
      * @throws \Exception
      */
-    private function checkAccessAndParseSerializableObject(EmberDataSerializableInterface $object)
+    private function checkAccessAndParseSerializableObject(EmberDataSerializableInterface $object, $maxDepth)
     {
         $adapter = $this->getSerializerAdapterOrNullBySerializableObject($object);
 
@@ -134,7 +152,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
             $this->data[$adapter->getModelNamePlural()] = array();
         }
 
-        $this->parseSerializableObject($object, true);
+        $this->parseSerializableObject($object, true, $maxDepth);
     }
 
     /**
@@ -143,7 +161,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
      *
      * @throws InvalidEmberDataSerializerInputException
      */
-    private function parseSerializableObject(EmberDataSerializableInterface $object, $plural = false)
+    private function parseSerializableObject(EmberDataSerializableInterface $object, $plural, $maxDepth)
     {
         $adapter = $this->getSerializerAdapterOrNullBySerializableObject($object);
 
@@ -212,8 +230,8 @@ class EmberDataSerializerManager implements ContainerAwareInterface
                         $this->data[$adapter->getModelNameSingular()][$key] = $allocatedData;
                     }
 
-                    if ($recurse) {
-                        $this->format($value);
+                    if ($recurse && $maxDepth > 0) {
+                        $this->format($value, null, $maxDepth - 1);
                     }
 
                 } else {
@@ -236,8 +254,8 @@ class EmberDataSerializerManager implements ContainerAwareInterface
                             $this->data[$adapter->getModelNameSingular()][$key] = $value->getId();
                         }
 
-                        if ($recurse) {
-                            $this->checkAccessAndParseSerializableObject($value);
+                        if ($recurse && $maxDepth > 0) {
+                            $this->checkAccessAndParseSerializableObject($value, $maxDepth - 1);
                         }
                     }
                 }
