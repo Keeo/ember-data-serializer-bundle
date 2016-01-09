@@ -162,6 +162,16 @@ class EmberDataSerializerManager implements ContainerAwareInterface
 
         $data = $adapter->getData($object);
 
+        assert(eval('
+            foreach($data as $key => $val) {
+                if (!is_array($val)) {
+                    echo "$key must contain an array.\n\n";
+                    return false;
+                }
+            }
+            return true;
+        '), 'Every row must be an array. But ' . $object->getEmberDataSerializerAdapterServiceName() . ' failed to do that.');
+
         foreach ($data as $key => $array) {
 
             $value = $array[0];
