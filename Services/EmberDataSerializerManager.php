@@ -197,11 +197,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
 
             if ($this->isArrayCollection($value)) {
 
-                if (count($value) && is_null($value[0])) {
-                    throw new InvalidEmberDataSerializerInputException("Given array needs to start at zero.");
-                }
-
-                if (count($value) && $value[0] instanceof EmberDataSerializableInterface) {
+                if (count($value) && $this->getLast($value) instanceof EmberDataSerializableInterface) {
 
                     foreach ($value as $var) {
                         if (!$var instanceof EmberDataSerializableInterface) {
@@ -211,7 +207,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
 
                     $allocatedData = array();
 
-                    $valueAdapter = $this->getSerializerAdapterOrNullBySerializableObject($value[0]);
+                    $valueAdapter = $this->getSerializerAdapterOrNullBySerializableObject($this->getLast($value));
 
                     if (!is_null($valueAdapter)) {
                         /** @var EmberDataSerializableInterface $v */
@@ -270,6 +266,19 @@ class EmberDataSerializerManager implements ContainerAwareInterface
 
             }
         }
+    }
+
+    private function getLast($value)
+    {
+        if (is_array($value)) {
+            return reset($value);
+        }
+        
+        if (method_exists($value, 'first')) {
+            return $value->first();
+        }
+
+        throw new InvalidEmberDataSerializerInputException("Was not able to get item from array.");
     }
 
     /**
