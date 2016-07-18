@@ -346,4 +346,9 @@ class EmberDataSerializerManager implements ContainerAwareInterface
     {
         $this->container = $container;
     }
+
+    public function reset()
+    {
+        $this->data = array();
+    }
 }
