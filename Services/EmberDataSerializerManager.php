@@ -136,17 +136,15 @@ class EmberDataSerializerManager implements ContainerAwareInterface
             return;
         }
 
-        $objectId = $adapter->getId($object);
-
         if (isset($this->data[$adapter->getModelNameSingular()])) {
-            if ($this->data[$adapter->getModelNameSingular()]['id'] == $objectId) {
+            if ($this->data[$adapter->getModelNameSingular()]['id'] == $object->getId()) {
                 return;
             }
         }
 
         if (isset($this->data[$adapter->getModelNamePlural()])) {
             foreach ($this->data[$adapter->getModelNamePlural()] as $check) {
-                if ($check['id'] == $objectId) {
+                if ($check['id'] == $object->getId()) {
                     return;
                 }
             }
@@ -216,7 +214,7 @@ class EmberDataSerializerManager implements ContainerAwareInterface
                         foreach ($value as $v) {
 
                             if ($valueAdapter->hasAccess($v)) {
-                                $allocatedData[] = $valueAdapter->getId($v);
+                                $allocatedData[] = $v->getId();
                             }
 
                         }
@@ -245,12 +243,11 @@ class EmberDataSerializerManager implements ContainerAwareInterface
 
                 if (!is_null($valueAdapter)) {
                     if ($valueAdapter->hasAccess($value)) {
-                        $valueId = $valueAdapter->getId($value);
 
                         if ($plural) {
-                            $this->data[$adapter->getModelNamePlural()][$index][$key] = $valueId;
+                            $this->data[$adapter->getModelNamePlural()][$index][$key] = $value->getId();
                         } else {
-                            $this->data[$adapter->getModelNameSingular()][$key] = $valueId;
+                            $this->data[$adapter->getModelNameSingular()][$key] = $value->getId();
                         }
 
                         if ($recurse && $maxDepth > 0) {
