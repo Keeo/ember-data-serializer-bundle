@@ -33,4 +33,9 @@ interface EmberDataSerializerAdapterInterface
      * @return string
      */
     public function getModelNamePlural();
+
+    /**
+     * @return mixed
+     */
+    public function getId(EmberDataSerializableInterface $object);
 }
